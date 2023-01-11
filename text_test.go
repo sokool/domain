@@ -1,7 +1,6 @@
 package domain_test
 
 import (
-	"fmt"
 	"github.com/sokool/domain"
 	"testing"
 )
@@ -25,6 +24,10 @@ func TestBodyJson(t *testing.T) {
 		t.Fatalf("wrong size, got %d", s)
 	}
 
+	if !n.LengthBetween(0, n.Length()) {
+		t.Fatalf("wrong length")
+	}
+
 	b, err := n.MarshalJSON()
 	if err != nil {
 		t.Fatal(err)
@@ -38,10 +41,8 @@ func TestBodyJson(t *testing.T) {
 	if n != m {
 		t.Fatalf("expected %s, got  %s", n, m)
 	}
-
-	x := domain.NewText("Hello Word")
-	fmt.Println(x.String(), x.Length(), x.LengthBetween(3, 8))
 }
+
 func TestJSONMultiUnmarshal(t *testing.T) {
 	n := domain.Text("Hello\nWorld")
 	for i := 0; i < 5; i++ {
