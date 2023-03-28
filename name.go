@@ -3,9 +3,10 @@ package domain
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"regexp"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 var spaces = regexp.MustCompile(`\s+`)
@@ -15,11 +16,15 @@ type Name struct {
 	Middle      []string
 }
 
-func NewName(text string) (Name, error) {
+func NewName(text string, maxsize ...int) (Name, error) {
 	var n Name
+	var l = 3
 	var s = spaces.ReplaceAllString(strings.TrimSpace(text), " ")
 	var p = strings.Split(s, " ")
-	if len(s) < 3 {
+	if len(maxsize) >= 1 {
+		l = maxsize[0]
+	}
+	if len(s) < l {
 		return n, Errorf("is too short")
 	}
 	switch m := len(p); {
