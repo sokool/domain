@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/sokool/domain/view"
 )
 
 type Text struct {
@@ -58,7 +57,7 @@ func (t *Text) UnmarshalJSON(b []byte) (err error) {
 
 func (t Text) MarshalJSON() ([]byte, error) {
 	if t.IsZero() {
-		return view.Null, nil
+		return []byte("null"), nil
 	}
 	return json.Marshal(t.string)
 }
