@@ -20,7 +20,7 @@ func NewName(text string) (Name, error) {
 	var s = spaces.ReplaceAllString(strings.TrimSpace(text), " ")
 	var p = strings.Split(s, " ")
 	if len(s) < 3 {
-		return n, fmt.Errorf("name: is too short")
+		return n, Errorf("is too short")
 	}
 	switch m := len(p); {
 	case m == 1:

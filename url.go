@@ -3,7 +3,6 @@ package domain
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"strings"
 )
@@ -18,13 +17,10 @@ type URL struct {
 func NewURL(s string) (URL, error) {
 	u, err := url.ParseRequestURI(s)
 	if err != nil {
-		return URL{}, err
+		return URL{}, Errorf("%w", err)
 	}
 	if u.Scheme == "" {
-		return URL{}, fmt.Errorf("url: no schema like http or https")
-	}
-	if u.Host == "" {
-		return URL{}, fmt.Errorf("url: host is missing in %s", s)
+		return URL{}, Errorf("no schema like http or https")
 	}
 	var pth []string
 	if p := strings.Split(u.Path, "/"); len(p) > 1 {
@@ -41,6 +37,17 @@ func NewURL(s string) (URL, error) {
 		Query:    u.Query(),
 		u:        u,
 	}, nil
+}
+
+func (u *URL) Format(s string) string {
+	s = strings.Replace(s, "scheme", u.Schema, -1)
+	s = strings.Replace(s, "host", u.Host, -1)
+	s = strings.Replace(s, "port", u.Port, -1)
+	s = strings.Replace(s, "user", u.Username, -1)
+	s = strings.Replace(s, "password", u.Password, -1)
+	s = strings.Replace(s, "path", strings.Join(u.Path, "/"), -1)
+	s = strings.Replace(s, "query", u.Query.Encode(), -1)
+	return s
 }
 
 func (u *URL) IsZero() bool {

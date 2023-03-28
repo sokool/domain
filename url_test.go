@@ -1,10 +1,11 @@
 package domain_test
 
 import (
-	"github.com/sokool/domain"
-	"github.com/stretchr/testify/assert"
 	"net/url"
 	"testing"
+
+	"github.com/sokool/domain"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestURL_UnmarshalJSON(t *testing.T) {

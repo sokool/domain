@@ -1,12 +1,14 @@
 package domain_test
 
 import (
-	"github.com/sokool/domain"
 	"testing"
+
+	"github.com/sokool/domain"
 )
 
 func TestBodyJson(t *testing.T) {
-	n := domain.Text("hi there")
+
+	n := domain.MustText("hi there")
 
 	if n.IsZero() {
 		t.Fatalf("expected not zero, got %s", n)
@@ -16,7 +18,7 @@ func TestBodyJson(t *testing.T) {
 		t.Fatal()
 	}
 
-	if n.Word(0) != "hi" || n.Word(1) != "there" {
+	if !n.Word(0).Is("hi") || !n.Word(1).Is("there") {
 		t.Fatal("x")
 	}
 
@@ -39,12 +41,12 @@ func TestBodyJson(t *testing.T) {
 	}
 
 	if n != m {
-		t.Fatalf("expected %s, got  %s", n, m)
+		t.Fatalf("expected `%s`, got `%s`", n, m)
 	}
 }
 
 func TestJSONMultiUnmarshal(t *testing.T) {
-	n := domain.Text("Hello\nWorld")
+	n := domain.MustText("Hello\nWorld")
 	for i := 0; i < 5; i++ {
 		x, err := n.MarshalJSON()
 		if err != nil {
@@ -56,7 +58,7 @@ func TestJSONMultiUnmarshal(t *testing.T) {
 		}
 	}
 
-	if n != "Hello\nWorld" {
+	if !n.Is("Hello\nWorld") {
 		t.Fatal("uuu")
 	}
 }

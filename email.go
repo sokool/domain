@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Email struct {
@@ -12,7 +14,7 @@ type Email struct {
 }
 
 func NewEmail(text string) (e Email, err error) {
-	if ok, _ := regexp.MatchString(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`, text); !ok {
+	if ok, _ := regexp.MatchString(`^[\w._%+\-]+@[\w.\-]+\.\w{2,32}$`, text); !ok {
 		return e, fmt.Errorf("email: %s has invalid format", text)
 	}
 
@@ -41,7 +43,6 @@ func (e Email) String() string {
 
 func (e Email) MarshalJSON() ([]byte, error) {
 	return json.Marshal(e.String())
-
 }
 
 func (e *Email) UnmarshalJSON(b []byte) (err error) {
@@ -63,4 +64,20 @@ func (e *Email) UnmarshalText(b []byte) error {
 	v, err := NewEmail(string(b))
 	*e = v
 	return err
+}
+
+func (e *Email) UnmarshalYAML(n *yaml.Node) (err error) {
+	var s string
+	var v Email
+
+	if err = n.Decode(&s); err != nil {
+		return
+	}
+
+	if v, err = NewEmail(s); err != nil {
+		return
+	}
+
+	*e = v
+	return nil
 }
