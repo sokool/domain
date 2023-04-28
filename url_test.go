@@ -2,8 +2,6 @@ package domain_test
 
 import (
 	"testing"
-
-	"github.com/sokool/domain"
 )
 
 func TestURL_UnmarshalJSON(t *testing.T) {
@@ -27,6 +25,6 @@ func TestURL_UnmarshalJSON(t *testing.T) {
 }
 
 func TestURL_IsZero(t *testing.T) {
-	var u domain.URL
+	//var u domain.URL
 	//assert.Equal(t, u.IsZero(), true)
 }
