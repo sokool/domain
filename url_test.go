@@ -1,7 +1,10 @@
 package domain_test
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/sokool/domain"
 )
 
 func TestURL_UnmarshalJSON(t *testing.T) {
@@ -27,4 +30,29 @@ func TestURL_UnmarshalJSON(t *testing.T) {
 func TestURL_IsZero(t *testing.T) {
 	//var u domain.URL
 	//assert.Equal(t, u.IsZero(), true)
+}
+
+func TestNewURL(t *testing.T) {
+	type scenario struct {
+		description string
+		url         string
+		err         bool
+	}
+
+	cases := []scenario{
+		{"empty string fails", "", true},
+		{"host, no schema ok", "wosp.org.pl", false},
+		{"schema,host is ok", "https://wosp.org.pl", false},
+		{"schema,host,path is ok", "https://wosp.org.pl/some/path", false},
+	}
+
+	u, err := domain.NewURL("https://wosp.org.pl/some/path")
+	fmt.Println(u.Path, err)
+	for _, c := range cases {
+		t.Run(c.description, func(t *testing.T) {
+			if _, err := domain.NewURL(c.url); (err != nil && !c.err) || (err == nil && c.err) {
+				t.Fatalf("expected error:%v got:%v", c.err, err)
+			}
+		})
+	}
 }

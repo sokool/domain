@@ -9,22 +9,29 @@ import (
 
 type URL struct {
 	Schema, Username, Password, Host, Port string
-	Path                                   []string
+	Path                                   Path
 	Query                                  url.Values
 	u                                      *url.URL
 }
 
-func NewURL(s string) (URL, error) {
-	u, err := url.ParseRequestURI(s)
+func NewURL(s string, validation ...string) (URL, error) {
+	v := texts(validation)
+	u, err := url.Parse(s)
 	if err != nil {
-		return URL{}, Errorf("%w", err)
+		return URL{}, Errorf("parse failed %w", err)
 	}
-	if u.Scheme == "" {
+	if s == "" && v.has("no-empty") == -1 {
+		return URL{}, Errorf("no empty string allowed")
+	}
+	if u.Scheme == "" && v.has("schema") != -1 {
 		return URL{}, Errorf("no schema like http or https")
 	}
-	var pth []string
+
+	var d Path
 	if p := strings.Split(u.Path, "/"); len(p) > 1 {
-		pth = p[1:]
+		if d, err = NewPath(u.Path); err != nil {
+			return URL{}, Errorf("invalid path %w", err)
+		}
 	}
 	pwd, _ := u.User.Password()
 	return URL{
@@ -33,7 +40,7 @@ func NewURL(s string) (URL, error) {
 		Password: pwd,
 		Host:     u.Hostname(),
 		Port:     u.Port(),
-		Path:     pth,
+		Path:     d,
 		Query:    u.Query(),
 		u:        u,
 	}, nil
@@ -45,7 +52,7 @@ func (u *URL) Format(s string) string {
 	s = strings.Replace(s, "port", u.Port, -1)
 	s = strings.Replace(s, "user", u.Username, -1)
 	s = strings.Replace(s, "password", u.Password, -1)
-	s = strings.Replace(s, "path", strings.Join(u.Path, "/"), -1)
+	s = strings.Replace(s, "path", u.Path.String(), -1)
 	s = strings.Replace(s, "query", u.Query.Encode(), -1)
 	return s
 }
@@ -73,4 +80,15 @@ func (u *URL) MarshalJSON() ([]byte, error) {
 
 func (u *URL) String() string {
 	return u.u.String()
+}
+
+type texts []string
+
+func (s texts) has(value string) int {
+	for i := range s {
+		if s[i] == value {
+			return i
+		}
+	}
+	return -1
 }
