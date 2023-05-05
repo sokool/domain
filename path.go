@@ -19,11 +19,13 @@ func NewPath(s string) (Path, error) {
 }
 
 func (d Path) Append(r Path) Path {
+	if r.IsZero() {
+		return d
+	}
 	if d.Trim(0).String() == "/" {
 		return r
 	}
-
-	return Path{append(d.strings, r.strings...)}
+	return Path{append(d.strings, r.strings[1:]...)}
 }
 
 // Replace first n character from underlying dir string
