@@ -5,55 +5,66 @@ import (
 	"strings"
 )
 
-type Path struct{ string }
+type Path struct{ strings []string }
 
 func NewPath(s string) (Path, error) {
+	ss := strings.Split(s, "/")
 	if s == "/" {
-		return Path{s}, nil
+		return Path{ss}, nil
 	}
 	if ok, _ := regexp.MatchString(`^(/[\w\s~+!'.-]+)+$`, s); ok {
-		return Path{s}, nil
+		return Path{ss}, nil
 	}
 	return Path{}, Errorf("`%s` must start from / character followed by alphanumerics and/or _ ' ! . - ", s)
 }
 
 func (d Path) Append(r Path) Path {
-	if d.string == "/" {
+	if d.Trim(0).String() == "/" {
 		return r
 	}
-	d.string += r.string
-	return d
+
+	return Path{append(d.strings, r.strings...)}
 }
 
-// Cut first n character from underlying dir string
-func (d Path) Cut(n int) string {
-	if d.IsZero() {
-		return ""
+// Replace first n character from underlying dir string
+func (d Path) Replace(old, new string, occurrences ...int) string {
+	if len(occurrences) == 0 {
+		occurrences = append(occurrences, 1)
 	}
-	return d.string[n:]
+	return strings.Replace(d.String(), old, new, occurrences[0])
 }
 
 // Tail gives last part of dir, it might be directory or file with extension
 func (d Path) Tail() string {
-	s := strings.Split(d.string, "/")
-	return s[len(s)-1]
+	return d.strings[len(d.strings)-1]
 }
 
-func (d Path) Element(n int) string {
-	if d.IsZero() {
-		return ""
+// Trim ...
+func (d Path) Trim(from int, to ...int) Path {
+	s := d.Size()
+	if s == 0 {
+		return Path{}
 	}
-	s := strings.Split(d.string, "/")
-	if len(s)-1 <= n {
-		return ""
+	if s <= from {
+		return Path{}
 	}
-	return s[n+1]
+	ss := []string{""}
+	if l := len(to); l == 0 || to[0] == -1 {
+		ss = append(ss, d.strings[from+1:]...)
+	} else {
+		ss = append(ss, d.strings[from+1:to[0]+1]...)
+	}
+	return Path{ss}
+}
+
+func (d Path) Size() int {
+	return len(d.strings) - 1
 }
 
 func (d Path) IsZero() bool {
-	return d.string == ""
+	return d.Size() == 0
 }
 
 func (d Path) String() string {
-	return d.string
+	return strings.Join(d.strings, "/")
 }

@@ -1,6 +1,7 @@
 package domain_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/sokool/domain"
@@ -40,4 +41,34 @@ func TestNewPath(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPath_Element(t *testing.T) {
+	type scenario struct {
+		description string
+		path        string
+		from, to    int
+		elements    string
+	}
+
+	cases := []scenario{
+		{"no path", "", 0, -1, ""},
+		{"from 0 of / gives /", "/", 0, -1, "/"},
+		{"from 0 of /a/b gives /a/b", "/a/b", 0, -1, "/a/b"},
+		{"from 0 of /a/b gives /b", "/a/b", 1, -1, "/b"},
+		{"from 2 of /a/b gives none", "/a/b", 2, -1, ""},
+		{"from 1 to 3 of /a/b/c/d gives /b/c", "/a/b/c/d", 1, 3, "/b/c"},
+	}
+
+	for _, c := range cases {
+		t.Run(c.description, func(t *testing.T) {
+			p, _ := domain.NewPath(c.path)
+			if s := p.Trim(c.from, c.to).String(); s != c.elements {
+				t.Fatalf("expected `%s`, got:`%s`", c.elements, s)
+			}
+			fmt.Println(p.String())
+			fmt.Println(p.Replace("/", ""))
+		})
+	}
+
 }
