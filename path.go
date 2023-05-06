@@ -8,6 +8,9 @@ import (
 type Path struct{ strings []string }
 
 func NewPath(s string) (Path, error) {
+	if len(s) == 0 || s[0] != '/' {
+		s = "/" + s
+	}
 	ss := strings.Split(s, "/")
 	if s == "/" {
 		return Path{ss}, nil

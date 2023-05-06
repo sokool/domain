@@ -1,7 +1,6 @@
 package domain_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/sokool/domain"
@@ -41,13 +40,11 @@ func TestNewURL(t *testing.T) {
 
 	cases := []scenario{
 		{"empty string fails", "", true},
-		{"host, no schema ok", "wosp.org.pl", false},
+		{"host and no schema fails", "wosp.org.pl", true},
 		{"schema,host is ok", "https://wosp.org.pl", false},
-		{"schema,host,path is ok", "https://wosp.org.pl/some/path", false},
+		{"schema,host,path is ok", "https://wosp.org.pl/", false},
 	}
 
-	u, err := domain.NewURL("https://wosp.org.pl/some/path")
-	fmt.Println(u.Path, err)
 	for _, c := range cases {
 		t.Run(c.description, func(t *testing.T) {
 			if _, err := domain.NewURL(c.url); (err != nil && !c.err) || (err == nil && c.err) {

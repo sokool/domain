@@ -7,6 +7,20 @@ import (
 	"strings"
 )
 
+type Option uint
+
+const (
+	URL_Schema Option = 1 << iota
+	URL_Username
+	URL_Password
+	URL_Host
+	URL_Port
+	URL_Path
+	URL_Query
+)
+
+func (o Option) Has(p Option) bool { return o&p != 0 }
+
 type URL struct {
 	Schema, Username, Password, Host, Port string
 	Path                                   Path
@@ -14,36 +28,42 @@ type URL struct {
 	u                                      *url.URL
 }
 
-func NewURL(s string, validation ...string) (URL, error) {
-	v := texts(validation)
-	u, err := url.Parse(s)
+func NewURL(s string, validation ...Option) (URL, error) {
+	var u URL
+	var v Option
+	var ok bool
+	for i := range validation {
+		v |= validation[i]
+	}
+	x, err := url.Parse(s)
 	if err != nil {
-		return URL{}, Errorf("parse failed %w", err)
+		return u, Errorf("parse failed %w", err)
 	}
-	if s == "" && v.has("no-empty") == -1 {
-		return URL{}, Errorf("no empty string allowed")
+	if v == 0 {
+		v = URL_Schema | URL_Host | URL_Port
 	}
-	if u.Scheme == "" && v.has("schema") != -1 {
-		return URL{}, Errorf("no schema like http or https")
+	if u.Schema = x.Scheme; v.Has(URL_Schema) && u.Schema == "" {
+		return u, Errorf("no schema like http or https")
 	}
-
-	var d Path
-	if p := strings.Split(u.Path, "/"); len(p) > 1 {
-		if d, err = NewPath(u.Path); err != nil {
-			return URL{}, Errorf("invalid path %w", err)
-		}
+	if u.Password, ok = x.User.Password(); v.Has(URL_Password) && !ok {
+		return u, Errorf("password required")
 	}
-	pwd, _ := u.User.Password()
-	return URL{
-		Schema:   u.Scheme,
-		Username: u.User.Username(),
-		Password: pwd,
-		Host:     u.Hostname(),
-		Port:     u.Port(),
-		Path:     d,
-		Query:    u.Query(),
-		u:        u,
-	}, nil
+	if u.Username = x.User.Username(); v.Has(URL_Username) && u.Password == "" {
+		return u, Errorf("username required")
+	}
+	if u.Host = x.Host; v.Has(URL_Host) && u.Host == "" {
+		return u, Errorf("host required")
+	}
+	if u.Port = x.Port(); v.Has(URL_Port) && u.Port == "" {
+		return u, Errorf("port required")
+	}
+	if u.Query = x.Query(); v.Has(URL_Query) && len(u.Query) == 0 {
+		return u, Errorf("query required")
+	}
+	if u.Path, err = NewPath(x.Path); err != nil {
+		return URL{}, Errorf("invalid path %w", err)
+	}
+	return u, nil
 }
 
 func (u *URL) Format(s string) string {
@@ -70,7 +90,7 @@ func (u *URL) UnmarshalJSON(b []byte) error {
 	if err = json.Unmarshal(b, &s); err != nil {
 		return err
 	}
-	*u, err = NewURL(s)
+	*u, err = NewURL(s, 0)
 	return err
 }
 
