@@ -13,8 +13,11 @@ type Email struct {
 	Name, Alias, Domain string
 }
 
-func NewEmail(text string) (e Email, err error) {
-	if ok, _ := regexp.MatchString(`^[\w._%+\-]+@[\w.\-]+\.\w{2,32}$`, text); !ok {
+func NewEmail(text string, re ...*regexp.Regexp) (e Email, err error) {
+	if len(re) == 0 {
+		re = append(re, email)
+	}
+	if !re[0].MatchString(text) {
 		return e, fmt.Errorf("email: %s has invalid format", text)
 	}
 
@@ -27,12 +30,12 @@ func NewEmail(text string) (e Email, err error) {
 	return e, nil
 }
 
-func (e Email) IsZero() bool {
+func (e Email) IsEmpty() bool {
 	return e.Name == ""
 }
 
 func (e Email) String() string {
-	if e.IsZero() {
+	if e.IsEmpty() {
 		return ""
 	}
 	if e.Alias != "" {
@@ -81,3 +84,5 @@ func (e *Email) UnmarshalYAML(n *yaml.Node) (err error) {
 	*e = v
 	return nil
 }
+
+var email = regexp.MustCompile(`^[\w._%+\-]+@[\w.\-]+\.\w{2,32}$`)
