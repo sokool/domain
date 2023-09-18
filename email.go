@@ -50,16 +50,11 @@ func (e Email) MarshalJSON() ([]byte, error) {
 
 func (e *Email) UnmarshalJSON(b []byte) (err error) {
 	var s string
-	var v Email
 	if err = json.Unmarshal(b, &s); err != nil {
 		return
 	}
 
-	if v, err = NewEmail(s); err != nil {
-		return
-	}
-
-	*e = v
+	*e, err = NewEmail(s)
 	return nil
 }
 
