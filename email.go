@@ -44,6 +44,10 @@ func (e Email) String() string {
 	return fmt.Sprintf("%s@%s", e.Name, e.Domain)
 }
 
+func (e Email) Hash() string {
+	return Hash[Email](e.Name, e.Alias, e.Domain).String()
+}
+
 func (e Email) MarshalJSON() ([]byte, error) {
 	return json.Marshal(e.String())
 }

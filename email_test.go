@@ -14,13 +14,13 @@ func TestNewEmail(t *testing.T) {
 	}
 
 	cases := []scenario{
-		{"empty not ok", "", true},
-		{"@b.com not ok", "@b.com", true},
-		{"a@ not ok", "a@", true},
-		{"a@b not ok", "a@b", true},
-		{"a@b.c not ok", "a@b.c", true},
+		{"empty->err", "", true},
+		{"@b.com->err", "@b.com", true},
+		{"a@->err", "a@", true},
+		{"a@b->err", "a@b", true},
+		{"a@b.c->err", "a@b.c", true},
 		{"a@b.us->ok", "a@b.us", false},
-		{"Brad.Girow4+rollee+test@You2.CAN-Win.web3 is ok", "Brad.Girow4+rollee+test@You2.CAN-Win.web3", false},
+		{"Brad.Girow4+rollee+test@You2.CAN-Win.web3->ok", "Brad.Girow4+rollee+test@You2.CAN-Win.web3", false},
 	}
 	for _, c := range cases {
 		t.Run(c.description, func(t *testing.T) {
