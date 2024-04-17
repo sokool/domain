@@ -131,15 +131,15 @@ func TestUnit_GoString(t *testing.T) {
 	cases := map[string]scenario{
 		"137Mbps":                   {137 * domain.Mbps, "137Mbps"},
 		"56kHz div 5 = 11.2kHz":     {56 * domain.KHz / 5, "11.2kHz"},
-		"14MB div 8 = 1.75MB":       {14 * domain.MB / 8, "1.75MB"},
+		"1.4GB div 8 = 43.75MB":     {1.4 * domain.GB / 32, "43.75MB"},
 		"158kW div 9 = ~17.6kW":     {158 * domain.KW / 9, "~17.56kW"},
 		"43Gbps div 3 = ~14.33Gbps": {43 * domain.Gbps / 3, "~14.33Gbps"},
 	}
 
 	for n, c := range cases {
 		t.Run(n, func(t *testing.T) {
-			if c.whenUnit.(fmt.GoStringer).GoString() != c.thenString {
-				t.Errorf("got %s, want %s", c.whenUnit, c.thenString)
+			if s := c.whenUnit.(fmt.GoStringer).GoString(); s != c.thenString {
+				t.Errorf("got %s, want %s", s, c.thenString)
 			}
 		})
 	}
