@@ -45,7 +45,7 @@ func (e Email) String() string {
 }
 
 func (e Email) Hash() string {
-	return Hash[Email](e.Name, e.Alias, e.Domain).String()
+	return Hash(e)
 }
 
 func (e Email) MarshalJSON() ([]byte, error) {

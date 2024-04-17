@@ -1,34 +1,84 @@
-package domain_test
+package domain
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/sokool/domain"
 )
 
-func TestNewID(t *testing.T) {
-	//_, err := domain.NewHash[string]()
-	//if err == nil {
-	//	t.Fatal(err)
-	//}
-	var a domain.ID[int]
+func TestID_UnmarshalText(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		isError bool
+	}{
+		{
+			name:    "Valid UUID",
+			input:   "f47ac10b-58cc-0372-8567-0e02b2c3d479",
+			isError: false,
+		},
+		{
+			name:    "Invalid UUID",
+			input:   "f47ac10b-58cc-0372-8567-0e02b2c3d47",
+			isError: true,
+		},
+		{
+			name:    "Invalid Text",
+			input:   "some-id",
+			isError: true,
+		},
+	}
 
-	x, _ := domain.NewID[string]()
-	y, _ := domain.NewID[Product]()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var id ID[string]
 
-	fmt.Println(x, x.IsEmpty())
-	fmt.Println(y, y.IsEmpty())
-	fmt.Println(a, a.IsEmpty())
+			err := id.UnmarshalText([]byte(tt.input))
 
-	//fmt.Println(id)
-	//if err := domain.NewID(&id, "86b7cdbb-1c03-409e-a6e9-65501ff97036"); err != nil {
-	//	t.Fatal(err)
-	//}
-
-	//fmt.Println(id)
+			if tt.isError && err == nil {
+				t.Fatalf("error expected")
+			}
+			if !tt.isError && err != nil {
+				t.Fatalf("no error expected, got %v", err)
+			}
+			if err != nil {
+				return
+			}
+			if id.String() != tt.input {
+				t.Errorf("expected id %s, but got %s", tt.input, id)
+			}
+			if id.IsEmpty() {
+				t.Errorf("expected id to not be empty")
+			}
+		})
+	}
 }
 
-type Product struct {
-	ID domain.ID[Product]
+func TestID_MarshalText(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    ID[string]
+		expected string
+	}{
+		{
+			name:     "Valid UUID",
+			input:    MustID[string]("f47ac10b-58cc-0372-8567-0e02b2c3d479"),
+			expected: "f47ac10b-58cc-0372-8567-0e02b2c3d479",
+		},
+		{
+			name:     "Empty ID",
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var b, err = tt.input.MarshalText()
+
+			if err != nil {
+				t.Fatalf("no error expected, got %v", err)
+			}
+			if string(b) != tt.expected {
+				t.Errorf("expected id %s, but got %s", tt.expected, string(b))
+			}
+		})
+	}
 }
