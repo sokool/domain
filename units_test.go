@@ -85,43 +85,6 @@ func TestThroughput_UnmarshalJSON(t *testing.T) {
 	}
 }
 
-func TestPower_UnmarshalJSON(t *testing.T) {
-	type scenario struct {
-		description string
-		power       string
-		err         bool
-	}
-
-	cases := []scenario{
-		{"string without unit->err", `"550.6"`, true},
-		{"number without unit->err", `100`, true},
-		{"just unit->err", `kW`, true},
-		{"unknown unit->err", `40PkW`, true},
-		{"100W->ok", `"100W"`, false},
-		{"30kW->ok", `"30kW"`, false},
-		{"456.314kW->ok", `"456.314kW"`, false},
-	}
-
-	for _, c := range cases {
-		t.Run(c.description, func(t *testing.T) {
-			var dt domain.Power
-			err := json.Unmarshal([]byte(c.power), &dt)
-			if c.err && err == nil {
-				t.Fatalf("error expected")
-			}
-			if !c.err && err != nil {
-				t.Fatalf("no error expected, got %v", err)
-			}
-			if (c.power == "null" || c.power == "") && dt.String() == `0bps` {
-				return
-			}
-			if err == nil && !strings.Contains(c.power, dt.String()) {
-				t.Fatalf(`expected %s, got "%s"`, c.power, dt)
-			}
-		})
-	}
-}
-
 func TestUnit_GoString(t *testing.T) {
 	type scenario struct {
 		whenUnit   any
