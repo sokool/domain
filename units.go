@@ -29,6 +29,9 @@ const (
 	TB = Capacity(Tera)
 
 	KW = Power(Kilo)
+	MW = Power(Mega)
+	GW = Power(Giga)
+	TW = Power(Tera)
 )
 
 type (
