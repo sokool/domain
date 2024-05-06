@@ -17,13 +17,13 @@ type Location struct {
 func NewLocation(id ID[Location], p Point, a Address, m ...Meta) (Location, error) {
 	var r Location
 	if r.ID = id; r.ID.IsEmpty() {
-		return Location{}, fmt.Errorf("%w: invalid id", ErrLocation)
+		return Location{}, ErrLocation.New("invalid id")
 	}
 	if r.Point = p; r.Point.IsEmpty() {
-		return Location{}, fmt.Errorf("%w: invalid point", ErrLocation)
+		return Location{}, ErrLocation.New("invalid point")
 	}
 	if r.Address = a; r.Address.IsEmpty() {
-		return Location{}, fmt.Errorf("%w: invalid address", ErrLocation)
+		return Location{}, ErrLocation.New("invalid address")
 	}
 	if len(m) != 0 {
 		r.Meta = m[0]
@@ -77,7 +77,7 @@ func (p *Location) UnmarshalJSON(b []byte) error {
 	var n no
 	var err error
 	if err = json.Unmarshal(b, &n); err != nil {
-		return fmt.Errorf("%w: %w", ErrLocation, err)
+		return ErrLocation.Wrap(err)
 	}
 	if *p, err = NewLocation(n.ID, n.Point, n.Address, n.Meta); err != nil {
 		return err
@@ -107,4 +107,4 @@ func (a Address) IsEmpty() bool {
 	return a.Country == ""
 }
 
-var ErrLocation = fmt.Errorf("location")
+var ErrLocation = Errorf("location")

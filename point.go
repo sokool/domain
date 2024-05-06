@@ -9,10 +9,10 @@ type Point struct{ lat, lon *float64 }
 
 func NewPoint(lat, lon float64) (Point, error) {
 	if lon < -180 || lon > 180 {
-		return Point{}, fmt.Errorf("%w:invalid `%f` longitude", ErrPoint, lon)
+		return Point{}, ErrPoint.New("invalid `%f` longitude", lon)
 	}
 	if lat < -90 || lat > 90 {
-		return Point{}, fmt.Errorf("%w: invalid `%f` latitude", ErrPoint, lat)
+		return Point{}, ErrPoint.New("invalid `%f` latitude", lat)
 	}
 	return Point{&lat, &lon}, nil
 }
@@ -40,10 +40,10 @@ func (p *Point) UnmarshalJSON(bytes []byte) error {
 	var b struct{ Lat, Lon *float64 }
 	var err error
 	if err = json.Unmarshal(bytes, &b); err != nil {
-		return err
+		return ErrPoint.Wrap(err)
 	}
 	if b.Lat == nil || b.Lon == nil {
-		return fmt.Errorf("%w: lat and lng are required", ErrPoint)
+		return ErrPoint.New("lat and lng are required")
 	}
 	if *p, err = NewPoint(*b.Lat, *b.Lon); err != nil {
 		return err
@@ -59,10 +59,10 @@ func (p *Point) Scan(data any) error {
 	switch v := data.(type) {
 	case string:
 		if _, err := fmt.Sscanf(v, "(%f,%f)", &lat, &lon); err != nil {
-			return fmt.Errorf("%w: %s", ErrPoint, err)
+			return ErrPoint.Wrap(err)
 		}
 	default:
-		return fmt.Errorf("%w: cannot convert %v to point", ErrPoint, data)
+		return ErrPoint.New("cannot convert %v to a point", data)
 	}
 	t, err := NewPoint(lat, lon)
 	if err != nil {
@@ -79,4 +79,4 @@ func (p Point) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`{"lat":%v, "lon":%v}`, *p.lat, *p.lon)), nil
 }
 
-var ErrPoint = fmt.Errorf("point")
+var ErrPoint = Errorf("point")

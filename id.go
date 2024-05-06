@@ -19,7 +19,7 @@ func ParseID[T any](s string) (ID[T], error) {
 	s = strings.TrimSpace(s)
 	if _, err := uuid.Parse(s); err != nil {
 		var v T
-		return "", fmt.Errorf("%w:%T: %s", ErrID, v, err)
+		return "", ErrID.New("%T: %s", v, err)
 	}
 	return ID[T](s), nil
 }
@@ -64,4 +64,4 @@ func (id *ID[T]) UnmarshalText(b []byte) error {
 	return nil
 }
 
-var ErrID = fmt.Errorf("id")
+var ErrID = Errorf("id")

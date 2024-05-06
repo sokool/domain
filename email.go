@@ -18,7 +18,7 @@ func NewEmail(text string, re ...*regexp.Regexp) (e Email, err error) {
 		re = append(re, email)
 	}
 	if !re[0].MatchString(text) {
-		return e, fmt.Errorf("email: %s has invalid format", text)
+		return e, ErrEmail.New("%s has invalid format", text)
 	}
 
 	p := strings.Split(text, "@")
@@ -84,4 +84,5 @@ func (e *Email) UnmarshalYAML(n *yaml.Node) (err error) {
 	return nil
 }
 
+var ErrEmail = Errorf("email")
 var email = regexp.MustCompile(`^[\w._%+\-]+@[\w.\-]+\.\w{2,32}$`)

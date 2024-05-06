@@ -78,11 +78,11 @@ type Unit[T Formatter] float64
 func ParseUnit[T Formatter](s string) (Unit[T], error) {
 	p := numUnit.FindStringSubmatch(strings.ReplaceAll(s, " ", ""))
 	if len(p) != 3 {
-		return -1, fmt.Errorf("%w: invalid format, use number followed by string unit name, ie 45.99MB or 56kHz", ErrUnit)
+		return -1, ErrUnit.New("invalid format, use number followed by string unit name, ie 45.99MB or 56kHz")
 	}
 	f, err := strconv.ParseFloat(p[1], 64)
 	if err != nil {
-		return -1, fmt.Errorf("%w: not a number", ErrUnit)
+		return -1, ErrUnit.New("not a number")
 	}
 	if p[2] == `` {
 		return Unit[T](f), nil
@@ -101,7 +101,7 @@ func ParseUnit[T Formatter](s string) (Unit[T], error) {
 		s = t.Format("")
 	}
 	if s != p[2] {
-		return -1, fmt.Errorf("%w: expected %s, got %s", ErrUnit, s, p[2])
+		return -1, ErrUnit.New("expected %s, got %s", s, p[2])
 	}
 	return Unit[T](f), nil
 }
@@ -114,7 +114,7 @@ func (u Unit[T]) Values(format ...Unit[T]) (float64, string) {
 
 	var t T
 	var f string
-	var v = float64(u)
+	v := float64(u)
 	switch {
 	case v < Kilo:
 		f = t.Format("")
@@ -142,7 +142,7 @@ func (u Unit[T]) Tera() float64 { return float64(u) / Tera }
 func (u Unit[T]) Float() float64 { return float64(u) }
 
 func (u Unit[T]) GoString() string {
-	var f, s = u.Values()
+	f, s := u.Values()
 	// when the float has more than 2 decimal places represent it as string with ~ as a
 	// prefix, ie ~34.34MB
 	if a := strings.SplitN(fmt.Sprintf("%v", f), ".", 2); len(a) == 2 && len(a[1]) > 2 {
@@ -165,5 +165,7 @@ func (u Unit[T]) Meta(format Unit[T]) Meta {
 	}
 }
 
-var numUnit = regexp.MustCompile(`^([0-9.,]+)([A-z]+)$`)
-var ErrUnit = fmt.Errorf("unit")
+var (
+	numUnit = regexp.MustCompile(`^([0-9.,]+)([A-z]+)$`)
+	ErrUnit = Errorf("unit")
+)

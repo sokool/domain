@@ -41,11 +41,11 @@ func ParseMoney(s string, args ...any) (Money, error) {
 	}
 	p := reMoney.FindStringSubmatch(s)
 	if len(p) != 4 {
-		return Money{}, fmt.Errorf("%w invalid string format", ErrMoney)
+		return Money{}, ErrMoney.New("invalid '%s' string format", s)
 	}
 	f, err := strconv.ParseFloat(p[2], 64)
 	if err != nil {
-		return Money{}, fmt.Errorf("%w invalid string format", ErrMoney)
+		return Money{}, ErrMoney.New("invalid '%s' string format", s)
 	}
 	return NewMoney(f, strings.TrimSpace(p[3]), strings.TrimSpace(strings.ReplaceAll(p[1], ":", ""))), nil
 }
@@ -60,7 +60,7 @@ func MustMoney(s string, args ...any) Money {
 
 func (m Money) Add(n Money) (Money, error) {
 	if !m.isOK(n) {
-		return Money{}, fmt.Errorf("%w: currencies are different or Money is empty value", ErrMoney)
+		return Money{}, ErrMoney.New("currencies are different or Money is empty value")
 	}
 	s := *m.Amount + *n.Amount
 	return Money{Amount: &s, Currency: m.Currency, Label: m.Label}, nil
@@ -78,6 +78,14 @@ func (m Money) IsEmpty() bool {
 	return m.Amount == nil
 }
 
+func (m Money) Le(n Money) bool {
+	return m.isOK(n) && *m.Amount <= *n.Amount
+}
+
+func (m Money) Lt(n Money) bool {
+	return m.isOK(n) && *m.Amount < *n.Amount
+}
+
 func (m Money) Eq(n Money) bool {
 	return m.isOK(n) && *m.Amount == *n.Amount
 }
@@ -86,11 +94,8 @@ func (m Money) Gt(n Money) bool {
 	return m.isOK(n) && *m.Amount > *n.Amount
 }
 
-func (m Money) Gte(n Money) bool {
-	if n.IsEmpty() || m.IsEmpty() {
-		return false
-	}
-	return *m.Amount >= *n.Amount
+func (m Money) Ge(n Money) bool {
+	return m.isOK(n) && *m.Amount >= *n.Amount
 }
 
 func (m Money) Convert(to Currency, c Converter) (Money, error) {
@@ -99,7 +104,7 @@ func (m Money) Convert(to Currency, c Converter) (Money, error) {
 	}
 	n, err := c.Convert(m, to)
 	if err != nil {
-		return Money{}, fmt.Errorf("%w:convert: %w ", ErrMoney, err)
+		return Money{}, ErrMoney.New("convert: %w", err)
 	}
 	if n.Label == "" {
 		n.Label = m.Label
@@ -122,12 +127,15 @@ func (m Money) GoString() string {
 	return fmt.Sprintf("%T\n%s\n", m, b)
 }
 
-func (m Money) MarshalJSON() ([]byte, error) {
+func (m Money) MarshalJSON() (b []byte, err error) {
 	if m.IsEmpty() {
 		return []byte("null"), nil
 	}
 	type void Money
-	return json.Marshal((*void)(&m))
+	if b, err = json.Marshal((*void)(&m)); err != nil {
+		return nil, ErrMoney.Wrap(err)
+	}
+	return
 }
 
 func (m *Money) UnmarshalJSON(b []byte) error {
@@ -144,10 +152,20 @@ func (m *Money) UnmarshalJSON(b []byte) error {
 			Currency, Label string
 		}
 		if err = json.Unmarshal(b, &j); err != nil {
-			return err
+			return ErrMoney.Wrap(err)
 		}
-		*m, err = ParseMoney("%s:%v%s", j.Label, j.Amount, j.Currency)
-		return err
+		if j.Currency == "" {
+			return ErrMoney.New("currency can not be empty")
+		}
+		switch a := j.Amount.(type) {
+		case string:
+			*m, err = ParseMoney("%s:%v%s", j.Label, a, j.Currency)
+		case float64:
+			*m, err = ParseMoney("%s:%f%s", j.Label, a, j.Currency)
+		default:
+			return ErrMoney.New("not supported amount type")
+		}
+		return nil
 	default:
 		*m, err = ParseMoney(string(b))
 		return err
@@ -157,9 +175,12 @@ func (m *Money) UnmarshalJSON(b []byte) error {
 func (m *Money) Scan(src any) error {
 	switch v := src.(type) {
 	case string:
-		return m.UnmarshalJSON([]byte(v))
+		if err := m.UnmarshalJSON([]byte(v)); err != nil {
+			return ErrMoney.Wrap(err)
+		}
+		return nil
 	}
-	return fmt.Errorf("%w:scan: %T type not suported", ErrMoney, src)
+	return ErrMoney.New("scan: %T type not suported", src)
 }
 
 func (m Money) Value() (driver.Value, error) {
@@ -224,7 +245,7 @@ func (a *amount) String() string {
 }
 
 var (
-	ErrMoney = fmt.Errorf("money")
+	ErrMoney = Errorf("money")
 	reMoney  = regexp.MustCompile(`^(.*?:\s?)?(-?\d*\.?\d+)(\s?[A-Z]{3})$`)
 )
 
@@ -280,8 +301,4 @@ func (c converter) Convert(from Money, to Currency) (Money, error) {
 	}
 	m := from.Float() * r
 	return NewMoney(m, string(to)), nil
-}
-
-type Fooer interface {
-	Convert(Currency, Converter) error
 }

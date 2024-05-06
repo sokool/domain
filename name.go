@@ -25,7 +25,7 @@ func NewName(text string, maxsize ...int) (Name, error) {
 		l = maxsize[0]
 	}
 	if len(s) < l {
-		return n, Errorf("is too short")
+		return n, ErrName.New("is too short")
 	}
 	switch m := len(p); {
 	case m == 1:
@@ -93,3 +93,5 @@ func (f *Name) UnmarshalYAML(n *yaml.Node) (err error) {
 	*f = v
 	return nil
 }
+
+var ErrName = Errorf("name")

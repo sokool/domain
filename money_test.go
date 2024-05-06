@@ -2,7 +2,6 @@ package domain
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 )
 
@@ -74,7 +73,6 @@ func TestParseMoney(t *testing.T) {
 			if c.label != m.Label {
 				t.Fatalf("expected %s, got %s", c.label, m.Label)
 			}
-			fmt.Println(m.String())
 		})
 	}
 }
@@ -100,12 +98,12 @@ func TestMoney_UnmarshalJSON(t *testing.T) {
 		{
 			"just a number is not ok",
 			`1`,
-			`money invalid string format`,
+			`money:invalid '1' string format`,
 		},
 		{
 			"just a currency is not ok",
 			`"PLN"`,
-			`money invalid string format`,
+			`money:invalid 'PLN' string format`,
 		},
 		{
 			"currency and value as string is ok",
@@ -138,14 +136,19 @@ func TestMoney_UnmarshalJSON(t *testing.T) {
 			`{"amount":88.12,"currency":"CHF"}`,
 		},
 		{
+			"big amount formating",
+			`{"amount":13027806790,"currency":"PLN"}`,
+			`{"amount":13027806790.00,"currency":"PLN"}`,
+		},
+		{
 			"with empty amount",
 			`{"currency":"PLN"}`,
-			`money invalid string format`,
+			`money:not supported amount type`,
 		},
 		{
 			"with empty currency",
 			`{"amount":"1999","currency":""}`,
-			`money invalid string format`,
+			`money:currency can not be empty`,
 		},
 	}
 
@@ -186,7 +189,7 @@ func TestMoney_Scan(t *testing.T) {
 }
 
 func TestMoney_Add(t *testing.T) {
-	var m = MustMoney("It is a floating point stretch test: 0 USD")
+	m := MustMoney("It is a floating point stretch test: 0 USD")
 	var err error
 	for i := 1; i <= 1_000_000; i++ {
 		if m, err = m.Add(MustMoney("0.01 USD")); err != nil {
